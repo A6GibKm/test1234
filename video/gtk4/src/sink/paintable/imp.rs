@@ -165,6 +165,11 @@ impl PaintableImpl for Paintable {
 }
 
 impl Paintable {
+    #[cfg(feature = "gst_gl")]
+    pub(super) fn context(&self) -> Option<gdk::GLContext> {
+        self.gl_context.borrow().clone()
+    }
+
     pub(super) fn handle_frame_changed(&self, frame: Option<Frame>) {
         let context = self.gl_context.borrow();
         if let Some(frame) = frame {
@@ -195,5 +200,13 @@ impl Paintable {
 
             self.obj().invalidate_contents();
         }
+    }
+
+    pub(super) fn handle_flush_frames(&self) {
+        gst::debug!(CAT, imp: self, "Flushing frames");
+        self.paintables.borrow_mut().clear();
+        self.cached_textures.borrow_mut().clear();
+        self.obj().invalidate_size();
+        self.obj().invalidate_contents();
     }
 }
